@@ -108,7 +108,7 @@
 #define BX_CPU_LEVEL 6
 
 // emulate x86-64 instruction set?
-#define BX_SUPPORT_X86_64 0
+#define BX_SUPPORT_X86_64 1
 
 // emulate long physical address (>32 bit)
 #define BX_PHY_ADDRESS_LONG 1
@@ -143,7 +143,7 @@
 // This turns on Roland Mainz's idle hack.  Presently it is specific to the X11
 // and term gui. If people try to enable it elsewhere, give a compile error
 // after the gui definition so that they don't waste their time trying.
-#define BX_USE_IDLE_HACK 0
+#define BX_USE_IDLE_HACK 1
 
 // Minimum Emulated IPS.
 // This is used in the realtime PIT as well as for checking the
@@ -161,7 +161,7 @@
 // members of the C++ CPU class to be static.
 // This defaults to 1 since it should improve performance, but when
 // SMP mode is enabled, it will be turned off by configure.
-#define BX_USE_CPU_SMF 1
+#define BX_USE_CPU_SMF 0
 
 #define BX_USE_MEM_SMF 1
 
@@ -207,7 +207,7 @@
 #define BX_USE_BUSM_SMF     1  // Bus Mouse
 #define BX_USE_ACPI_SMF     1  // ACPI
 
-#define BX_PLUGINS 0
+#define BX_PLUGINS 1
 #define BX_HAVE_LTDL 0
 #define BX_HAVE_DLFCN_H 1
 
@@ -657,15 +657,15 @@ typedef
 
 #define BX_SUPPORT_ALIGNMENT_CHECK 1
 #define BX_SUPPORT_FPU 1
-#define BX_SUPPORT_3DNOW 0
+#define BX_SUPPORT_3DNOW 1
 #define BX_SUPPORT_PKEYS 0
 #define BX_SUPPORT_MONITOR_MWAIT 1
 #define BX_SUPPORT_PERFMON 1
 #define BX_SUPPORT_MEMTYPE 0
-#define BX_SUPPORT_SVM 0
-#define BX_SUPPORT_VMX 0
-#define BX_SUPPORT_AVX 0
-#define BX_SUPPORT_EVEX 0
+#define BX_SUPPORT_SVM 1
+#define BX_SUPPORT_VMX 2
+#define BX_SUPPORT_AVX 1
+#define BX_SUPPORT_EVEX 1
 
 #if BX_SUPPORT_SVM && BX_SUPPORT_X86_64 == 0
   #error "SVM require x86-64 support"
@@ -683,9 +683,9 @@ typedef
   #error "EVEX and AVX-512 support require AVX to be compiled in"
 #endif
 
-#define BX_SUPPORT_REPEAT_SPEEDUPS 0
+#define BX_SUPPORT_REPEAT_SPEEDUPS 1
 #define BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS 0
-#define BX_ENABLE_TRACE_LINKING 0
+#define BX_ENABLE_TRACE_LINKING 1
 
 #if (BX_DEBUGGER || BX_GDBSTUB) && BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
  #error "Handler-chaining-speedups are not supported together with internal debugger or gdb-stub!"
@@ -736,7 +736,7 @@ typedef
 //  * processors=2, bootstrap=0, ioapic_id=2
 //  * processors=4, bootstrap=0, ioapic_id=4
 //  * processors=8, bootstrap=0, ioapic_id=8
-#define BX_SUPPORT_SMP 0
+#define BX_SUPPORT_SMP 1
 #define BX_BOOTSTRAP_PROCESSOR 0
 
 // For P6 and Pentium family processors the local APIC ID feild is 4 bits
@@ -777,7 +777,7 @@ typedef
 #endif
 
 // set to use fast function calls
-#define BX_FAST_FUNC_CALL 0
+#define BX_FAST_FUNC_CALL 1
 
 // On gcc2.95+ x86 only
 #if BX_FAST_FUNC_CALL && defined(__i386__) && defined(__GNUC__) && (__GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 95))
@@ -806,7 +806,7 @@ typedef
 // Support x86 hardware debugger registers and facilities.
 // These are the debug facilities offered by the x86 architecture,
 // not the optional built-in debugger.
-#define BX_X86_DEBUGGER 0
+#define BX_X86_DEBUGGER 1
 
 // limited i440FX PCI support
 #define BX_SUPPORT_PCI 1
@@ -822,10 +822,10 @@ typedef
 #define BX_SUPPORT_CLGD54XX 0
 
 // Experimental 3dfx Voodoo (SST-1/2) emulation
-#define BX_SUPPORT_VOODOO 0
+#define BX_SUPPORT_VOODOO 1
 
 // USB host controllers
-#define BX_SUPPORT_USB_UHCI 0
+#define BX_SUPPORT_USB_UHCI 1
 #define BX_SUPPORT_USB_OHCI 0
 #define BX_SUPPORT_USB_EHCI 0
 #define BX_SUPPORT_USB_XHCI 0

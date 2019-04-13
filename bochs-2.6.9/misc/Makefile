@@ -15,7 +15,7 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
 
-.SUFFIXES: .cc
+.SUFFIXES: .cpp
 
 
 top_builddir = ..
@@ -30,12 +30,12 @@ CFLAGS = -g -O2 -D_FILE_OFFSET_BITS=64 -D_LARGE_FILES -pthread  $(X_CFLAGS)
 CXXFLAGS = -g -O2 -D_FILE_OFFSET_BITS=64 -D_LARGE_FILES -pthread  $(X_CFLAGS)
 
 LDFLAGS = 
-LIBS = 
+LIBS =  -ldl
 RANLIB = ranlib
 LIBTOOL=$(SHELL) $(top_builddir)/libtool
 
 
-.cc.o:
+.cpp.o:
 	$(CXX) -c $(CXXFLAGS) $< -o $@
 
 

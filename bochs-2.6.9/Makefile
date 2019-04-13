@@ -74,7 +74,7 @@ LIBTOOL=$(SHELL) $(top_builddir)/libtool
 DLLTOOL=dlltool
 RC_CMD=
 
-.SUFFIXES: .cc
+.SUFFIXES: .cpp
 
 srcdir = .
 
@@ -85,11 +85,11 @@ SHELL = /bin/bash
 
 CC = gcc
 CXX = g++
-CFLAGS = -g -O2 -D_FILE_OFFSET_BITS=64 -D_LARGE_FILES -pthread  $(X_CFLAGS) $(MCH_CFLAGS) $(FLA_FLAGS)  -DBX_SHARE_PATH='"$(sharedir)"'
-CXXFLAGS = -g -O2 -D_FILE_OFFSET_BITS=64 -D_LARGE_FILES -pthread  $(X_CFLAGS) $(MCH_CFLAGS) $(FLA_FLAGS)  -DBX_SHARE_PATH='"$(sharedir)"'
+CFLAGS = -g -O2 -D_FILE_OFFSET_BITS=64 -D_LARGE_FILES -pthread  $(X_CFLAGS) $(MCH_CFLAGS) $(FLA_FLAGS) -DBX_PLUGIN_PATH="\"${plugdir}\"" -DBX_SHARE_PATH='"$(sharedir)"'
+CXXFLAGS = -g -O2 -D_FILE_OFFSET_BITS=64 -D_LARGE_FILES -pthread  $(X_CFLAGS) $(MCH_CFLAGS) $(FLA_FLAGS) -DBX_PLUGIN_PATH="\"${plugdir}\"" -DBX_SHARE_PATH='"$(sharedir)"'
 
 LDFLAGS = 
-LIBS = 
+LIBS =  -ldl
 # To compile with readline:
 #   linux needs just -lreadline
 #   solaris needs -lreadline -lcurses
@@ -166,27 +166,27 @@ BX_OBJS = $(NONINLINE_OBJS)
 BX_INCLUDES = bochs.h config.h osdep.h
 
 
-.cc.o:
+.cpp.o:
 	$(CXX) -c $(BX_INCDIRS) $(CXXFLAGS) $< -o $@
 .c.o:
 	$(CC) -c $(BX_INCDIRS) $(CFLAGS) $(FPU_FLAGS) $< -o $@
 
 
-all: bochs  bximage  
+all: bochs bochs_plugins bximage  
 
 
 
-bochs: iodev/libiodev.a iodev/display/libdisplay.a iodev/hdimage/libhdimage.a    \
-		$(DEBUGGER_LIB) cpu/libcpu.a  cpu/cpudb/libcpudb.a memory/libmemory.a \
+bochs: iodev/libiodev.a      \
+		$(DEBUGGER_LIB) cpu/libcpu.a $(AVX_LIB) cpu/cpudb/libcpudb.a memory/libmemory.a \
 		gui/libgui.a $(DISASM_LIB)  $(BX_OBJS) \
-		$(SIMX86_OBJS) $(FPU_LIB)  
+		$(SIMX86_OBJS) $(FPU_LIB)  ltdl.o
 	$(LIBTOOL) --mode=link --tag CXX $(CXX) -o $@ $(CXXFLAGS) $(LDFLAGS) -export-dynamic $(BX_OBJS) $(SIMX86_OBJS) \
-		iodev/libiodev.a iodev/display/libdisplay.a iodev/hdimage/libhdimage.a    \
-		$(DEBUGGER_LIB) cpu/libcpu.a  cpu/cpudb/libcpudb.a \
+		iodev/libiodev.a      \
+		$(DEBUGGER_LIB) cpu/libcpu.a $(AVX_LIB) cpu/cpudb/libcpudb.a \
 		 memory/libmemory.a gui/libgui.a \
-		$(DISASM_LIB)   \
+		$(DISASM_LIB)  ltdl.o \
 		 $(FPU_LIB) \
-		$(GUI_LINK_OPTS) \
+		 \
 		$(DEVICE_LINK_OPTS) \
 		$(MCH_LINK_FLAGS) \
 		$(SIMX86_LINK_FLAGS) \
@@ -197,23 +197,23 @@ bochs: iodev/libiodev.a iodev/display/libdisplay.a iodev/hdimage/libhdimage.a   
 # Special make target for cygwin/mingw using dlltool instead of
 # libtool.  This creates a .DEF file, and exports file, an import library,
 # and then links bochs.exe with the exports file.
-.win32_dll_plugin_target: iodev/libiodev.a iodev/display/libdisplay.a iodev/hdimage/libhdimage.a   \
-		 $(DEBUGGER_LIB) cpu/libcpu.a  cpu/cpudb/libcpudb.a \
+.win32_dll_plugin_target: iodev/libiodev.a     \
+		 $(DEBUGGER_LIB) cpu/libcpu.a $(AVX_LIB) cpu/cpudb/libcpudb.a \
 		memory/libmemory.a gui/libgui.a $(DISASM_LIB)  \
-		$(BX_OBJS) $(SIMX86_OBJS) $(FPU_LIB)  
+		$(BX_OBJS) $(SIMX86_OBJS) $(FPU_LIB)  ltdl.o
 	$(DLLTOOL) --export-all-symbols --output-def bochs.def \
 		$(BX_OBJS) $(SIMX86_OBJS) \
-		iodev/libiodev.a iodev/display/libdisplay.a iodev/hdimage/libhdimage.a    \
-		cpu/libcpu.a  cpu/cpudb/libcpudb.a memory/libmemory.a gui/libgui.a \
-		$(DEBUGGER_LIB) $(DISASM_LIB)   \
+		iodev/libiodev.a      \
+		cpu/libcpu.a $(AVX_LIB) cpu/cpudb/libcpudb.a memory/libmemory.a gui/libgui.a \
+		$(DEBUGGER_LIB) $(DISASM_LIB)  ltdl.o \
 		 $(FPU_LIB)
 	$(DLLTOOL) --dllname bochs.exe --def bochs.def --output-lib dllexports.a
 	$(DLLTOOL) --dllname bochs.exe --output-exp bochs.exp --def bochs.def
 	$(CXX) -o bochs.exe $(CXXFLAGS) $(LDFLAGS) \
 	    $(BX_OBJS) bochs.exp $(SIMX86_OBJS) \
-		iodev/libiodev.a iodev/display/libdisplay.a iodev/hdimage/libhdimage.a    \
-		cpu/libcpu.a  cpu/cpudb/libcpudb.a memory/libmemory.a gui/libgui.a \
-		$(DEBUGGER_LIB) $(DISASM_LIB)   \
+		iodev/libiodev.a      \
+		cpu/libcpu.a $(AVX_LIB) cpu/cpudb/libcpudb.a memory/libmemory.a gui/libgui.a \
+		$(DEBUGGER_LIB) $(DISASM_LIB)  ltdl.o \
 		 $(FPU_LIB) \
 		$(GUI_LINK_OPTS) \
 		$(DEVICE_LINK_OPTS) \
@@ -257,37 +257,37 @@ bxhub: misc/bxhub.o misc/netutil.o
 	$(LIBTOOL) --mode=link --tag CXX $(CXX) -o $@ $(CXXFLAGS_CONSOLE) $(LDFLAGS) misc/bxhub.o misc/netutil.o 
 
 # compile with console CXXFLAGS, not gui CXXFLAGS
-misc/bximage.o: $(srcdir)/misc/bximage.cc $(srcdir)/misc/bswap.h \
+misc/bximage.o: $(srcdir)/misc/bximage.cpp $(srcdir)/misc/bswap.h \
   $(srcdir)/misc/bxcompat.h $(srcdir)/iodev/hdimage/hdimage.h
 	$(CXX) -c $(BX_INCDIRS) $(CXXFLAGS_CONSOLE) $(srcdir)/misc/bximage.cc -o $@
 
-misc/hdimage.o: $(srcdir)/iodev/hdimage/hdimage.cc \
+misc/hdimage.o: $(srcdir)/iodev/hdimage/hdimage.cpp \
   $(srcdir)/iodev/hdimage/hdimage.h $(srcdir)/misc/bxcompat.h
-	$(CXX) -c $(BX_INCDIRS) -DBXIMAGE $(CXXFLAGS_CONSOLE) $(srcdir)/iodev/hdimage/hdimage.cc -o $@
+	$(CXX) -c $(BX_INCDIRS) -DBXIMAGE $(CXXFLAGS_CONSOLE) $(srcdir)/iodev/hdimage/hdimage.cpp -o $@
 
-misc/vmware3.o: $(srcdir)/iodev/hdimage/vmware3.cc $(srcdir)/iodev/hdimage/vmware3.h \
+misc/vmware3.o: $(srcdir)/iodev/hdimage/vmware3.cpp $(srcdir)/iodev/hdimage/vmware3.h \
   $(srcdir)/iodev/hdimage/hdimage.h $(srcdir)/misc/bxcompat.h
-	$(CXX) -c $(BX_INCDIRS) -DBXIMAGE $(CXXFLAGS_CONSOLE) $(srcdir)/iodev/hdimage/vmware3.cc -o $@
+	$(CXX) -c $(BX_INCDIRS) -DBXIMAGE $(CXXFLAGS_CONSOLE) $(srcdir)/iodev/hdimage/vmware3.cpp -o $@
 
-misc/vmware4.o: $(srcdir)/iodev/hdimage/vmware4.cc $(srcdir)/iodev/hdimage/vmware4.h \
+misc/vmware4.o: $(srcdir)/iodev/hdimage/vmware4.cpp $(srcdir)/iodev/hdimage/vmware4.h \
   $(srcdir)/iodev/hdimage/hdimage.h $(srcdir)/misc/bxcompat.h
-	$(CXX) -c $(BX_INCDIRS) -DBXIMAGE $(CXXFLAGS_CONSOLE) $(srcdir)/iodev/hdimage/vmware4.cc -o $@
+	$(CXX) -c $(BX_INCDIRS) -DBXIMAGE $(CXXFLAGS_CONSOLE) $(srcdir)/iodev/hdimage/vmware4.cpp -o $@
 
-misc/vpc-img.o: $(srcdir)/iodev/hdimage/vpc-img.cc $(srcdir)/iodev/hdimage/vpc-img.h \
+misc/vpc-img.o: $(srcdir)/iodev/hdimage/vpc-img.cpp $(srcdir)/iodev/hdimage/vpc-img.h \
   $(srcdir)/iodev/hdimage/hdimage.h $(srcdir)/misc/bxcompat.h
-	$(CXX) -c $(BX_INCDIRS) -DBXIMAGE $(CXXFLAGS_CONSOLE) $(srcdir)/iodev/hdimage/vpc-img.cc -o $@
+	$(CXX) -c $(BX_INCDIRS) -DBXIMAGE $(CXXFLAGS_CONSOLE) $(srcdir)/iodev/hdimage/vpc-img.cpp -o $@
 
-misc/vbox.o: $(srcdir)/iodev/hdimage/vbox.cc $(srcdir)/iodev/hdimage/vbox.h \
+misc/vbox.o: $(srcdir)/iodev/hdimage/vbox.cpp $(srcdir)/iodev/hdimage/vbox.h \
   $(srcdir)/iodev/hdimage/hdimage.h $(srcdir)/misc/bxcompat.h
-	$(CXX) -c $(BX_INCDIRS) -DBXIMAGE $(CXXFLAGS_CONSOLE) $(srcdir)/iodev/hdimage/vbox.cc -o $@
+	$(CXX) -c $(BX_INCDIRS) -DBXIMAGE $(CXXFLAGS_CONSOLE) $(srcdir)/iodev/hdimage/vbox.cpp -o $@
 
-misc/bxhub.o: $(srcdir)/misc/bxhub.cc $(srcdir)/iodev/network/netmod.h \
+misc/bxhub.o: $(srcdir)/misc/bxhub.cpp $(srcdir)/iodev/network/netmod.h \
   $(srcdir)/misc/bxcompat.h
-	$(CC) -c $(BX_INCDIRS) $(CXXFLAGS_CONSOLE) $(srcdir)/misc/bxhub.cc -o $@
+	$(CC) -c $(BX_INCDIRS) $(CXXFLAGS_CONSOLE) $(srcdir)/misc/bxhub.cpp -o $@
 
-misc/netutil.o: $(srcdir)/iodev/network/netutil.cc $(srcdir)/iodev/network/netutil.h \
+misc/netutil.o: $(srcdir)/iodev/network/netutil.cpp $(srcdir)/iodev/network/netutil.h \
   $(srcdir)/iodev/network/netmod.h $(srcdir)/misc/bxcompat.h
-	$(CXX) -c $(BX_INCDIRS)  $(CXXFLAGS_CONSOLE) $(srcdir)/iodev/network/netutil.cc -o $@
+	$(CXX) -c $(BX_INCDIRS)  $(CXXFLAGS_CONSOLE) $(srcdir)/iodev/network/netutil.cpp -o $@
 
 # compile with console CFLAGS, not gui CXXFLAGS
 misc/niclist.o: $(srcdir)/misc/niclist.c
@@ -423,7 +423,7 @@ install_win32: download_dlx dl_docbook
 # install target for unix
 #####################################################################
 
-install_unix: install_bin  install_man install_share install_doc 
+install_unix: install_bin install_libtool_plugins install_man install_share install_doc 
 
 install_bin::
 	for i in $(DESTDIR)$(bindir); do mkdir -p $$i && test -d $$i && test -w $$i; done
@@ -782,15 +782,15 @@ install_macosx: all download_dlx install_man
 
 ###########################################
 # dependencies generated by
-#  gcc -MM -I. -Iinstrument/stubs *.cc | sed -e 's/\.cc/.cc/g' -e 's,cpu/,cpu/,g'
+#  gcc -MM -I. -Iinstrument/stubs *.cc | sed -e 's/\.cc/.cpp/g' -e 's,cpu/,cpu/,g'
 ###########################################
-config.o: config.cc bochs.h config.h osdep.h bx_debug/debug.h config.h \
+config.o: config.cpp bochs.h config.h osdep.h bx_debug/debug.h config.h \
  osdep.h gui/siminterface.h cpudb.h gui/paramtree.h memory/memory-bochs.h \
  pc_system.h gui/gui.h instrument/stubs/instrument.h bxversion.h \
  iodev/iodev.h bochs.h plugin.h extplugin.h param_names.h param_names.h \
  cpudb.h
-crc.o: crc.cc config.h
-gdbstub.o: gdbstub.cc bochs.h config.h osdep.h bx_debug/debug.h config.h \
+crc.o: crc.cpp config.h
+gdbstub.o: gdbstub.cpp bochs.h config.h osdep.h bx_debug/debug.h config.h \
  osdep.h gui/siminterface.h cpudb.h gui/paramtree.h memory/memory-bochs.h \
  pc_system.h gui/gui.h instrument/stubs/instrument.h param_names.h \
  cpu/cpu.h cpu/decoder/decoder.h cpu/i387.h cpu/fpu/softfloat.h \
@@ -798,7 +798,7 @@ gdbstub.o: gdbstub.cc bochs.h config.h osdep.h bx_debug/debug.h config.h \
  cpu/descriptor.h cpu/decoder/instr.h cpu/decoder/ia_opcodes.h \
  cpu/lazy_flags.h cpu/tlb.h cpu/icache.h cpu/apic.h cpu/xmm.h cpu/vmx.h \
  cpu/cpuid.h cpu/stack.h cpu/access.h
-load32bitOShack.o: load32bitOShack.cc bochs.h config.h osdep.h \
+load32bitOShack.o: load32bitOShack.cpp bochs.h config.h osdep.h \
  bx_debug/debug.h config.h osdep.h gui/siminterface.h cpudb.h \
  gui/paramtree.h memory/memory-bochs.h pc_system.h gui/gui.h \
  instrument/stubs/instrument.h param_names.h cpu/cpu.h \
@@ -807,14 +807,14 @@ load32bitOShack.o: load32bitOShack.cc bochs.h config.h osdep.h \
  cpu/decoder/instr.h cpu/decoder/ia_opcodes.h cpu/lazy_flags.h cpu/tlb.h \
  cpu/icache.h cpu/apic.h cpu/xmm.h cpu/vmx.h cpu/cpuid.h cpu/access.h \
  iodev/iodev.h bochs.h plugin.h extplugin.h param_names.h
-logio.o: logio.cc bochs.h config.h osdep.h bx_debug/debug.h config.h \
+logio.o: logio.cpp bochs.h config.h osdep.h bx_debug/debug.h config.h \
  osdep.h gui/siminterface.h cpudb.h gui/paramtree.h memory/memory-bochs.h \
  pc_system.h gui/gui.h instrument/stubs/instrument.h cpu/cpu.h \
  cpu/decoder/decoder.h cpu/i387.h cpu/fpu/softfloat.h cpu/fpu/tag_w.h \
  cpu/fpu/status_w.h cpu/fpu/control_w.h cpu/crregs.h cpu/descriptor.h \
  cpu/decoder/instr.h cpu/decoder/ia_opcodes.h cpu/lazy_flags.h cpu/tlb.h \
  cpu/icache.h cpu/apic.h cpu/xmm.h cpu/vmx.h cpu/cpuid.h cpu/access.h
-main.o: main.cc bochs.h config.h osdep.h bx_debug/debug.h config.h \
+main.o: main.cpp bochs.h config.h osdep.h bx_debug/debug.h config.h \
  osdep.h gui/siminterface.h cpudb.h gui/paramtree.h memory/memory-bochs.h \
  pc_system.h gui/gui.h instrument/stubs/instrument.h bxversion.h \
  param_names.h gui/textconfig.h cpu/cpu.h cpu/decoder/decoder.h \
@@ -823,10 +823,10 @@ main.o: main.cc bochs.h config.h osdep.h bx_debug/debug.h config.h \
  cpu/decoder/ia_opcodes.h cpu/lazy_flags.h cpu/tlb.h cpu/icache.h \
  cpu/apic.h cpu/xmm.h cpu/vmx.h cpu/cpuid.h cpu/access.h iodev/iodev.h \
  bochs.h plugin.h extplugin.h param_names.h
-osdep.o: osdep.cc bochs.h config.h osdep.h bx_debug/debug.h config.h \
+osdep.o: osdep.cpp bochs.h config.h osdep.h bx_debug/debug.h config.h \
  osdep.h gui/siminterface.h cpudb.h gui/paramtree.h memory/memory-bochs.h \
  pc_system.h gui/gui.h instrument/stubs/instrument.h
-pc_system.o: pc_system.cc bochs.h config.h osdep.h bx_debug/debug.h \
+pc_system.o: pc_system.cpp bochs.h config.h osdep.h bx_debug/debug.h \
  config.h osdep.h gui/siminterface.h cpudb.h gui/paramtree.h \
  memory/memory-bochs.h pc_system.h gui/gui.h \
  instrument/stubs/instrument.h cpu/cpu.h cpu/decoder/decoder.h cpu/i387.h \
@@ -835,7 +835,7 @@ pc_system.o: pc_system.cc bochs.h config.h osdep.h bx_debug/debug.h \
  cpu/decoder/ia_opcodes.h cpu/lazy_flags.h cpu/tlb.h cpu/icache.h \
  cpu/apic.h cpu/xmm.h cpu/vmx.h cpu/cpuid.h cpu/access.h iodev/iodev.h \
  bochs.h plugin.h extplugin.h param_names.h
-plugin.o: plugin.cc bochs.h config.h osdep.h bx_debug/debug.h config.h \
+plugin.o: plugin.cpp bochs.h config.h osdep.h bx_debug/debug.h config.h \
  osdep.h gui/siminterface.h cpudb.h gui/paramtree.h memory/memory-bochs.h \
  pc_system.h gui/gui.h instrument/stubs/instrument.h iodev/iodev.h \
  bochs.h plugin.h extplugin.h param_names.h plugin.h

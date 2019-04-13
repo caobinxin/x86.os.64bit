@@ -17,7 +17,7 @@
 # Makefile for the BIOS component of bochs
 
 
-.SUFFIXES: .cc
+.SUFFIXES: .cpp
 
 srcdir = .
 
@@ -30,7 +30,7 @@ CXX = g++
 CXXFLAGS = -g -O2 -D_FILE_OFFSET_BITS=64 -D_LARGE_FILES -pthread
 
 LDFLAGS = 
-LIBS = 
+LIBS =  -ldl
 RANLIB = ranlib
 
 BCC = bcc
@@ -48,7 +48,7 @@ BIOS_BUILD_DATE = "-DBIOS_BUILD_DATE=\"$(BUILDDATE)\""
 #
 
 
-.cc.o:
+.cpp.o:
 	$(CXX) -c $(BX_INCDIRS) $(CXXFLAGS) $(LOCAL_CXXFLAGS) $< -o $@
 
 

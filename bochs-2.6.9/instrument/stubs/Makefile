@@ -16,7 +16,7 @@
 
 
 
-.SUFFIXES: .cc
+.SUFFIXES: .cpp
 
 srcdir = .
 
@@ -31,7 +31,7 @@ CXX = g++
 CXXFLAGS = -g -O2 -D_FILE_OFFSET_BITS=64 -D_LARGE_FILES -pthread
 
 LDFLAGS = 
-LIBS = 
+LIBS =  -ldl
 RANLIB = ranlib
 
 
@@ -47,7 +47,7 @@ BX_INCLUDES =
 
 BX_INCDIRS = -I../.. -I$(srcdir)/../.. -I. -I$(srcdir)/.
 
-.cc.o:
+.cpp.o:
 	$(CXX) -c $(CXXFLAGS) $(BX_INCDIRS) $< -o $@
 
 
