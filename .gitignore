@@ -24,3 +24,5 @@
 *.tar.gz
 *.rar
 *.o
+*.img
+*.bin
