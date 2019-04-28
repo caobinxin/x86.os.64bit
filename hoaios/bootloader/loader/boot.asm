@@ -105,14 +105,14 @@ Lable_Search_In_Root_Dir_Begin:
 	mov si, LoaderFileName
 	mov di, 8000h
 	cld                                         # cld 使得传送方向从低地址到高地址，而 std 就刚好相反 cld 和 std 都是在字行块传送时使用的，他们决定了块传送的方向
-	mov dx, 10h 
+	mov dx, 10h                                 # dx 记录这每个扇区可容纳的目录项数 10h = 512 / 32 = 16 = 0x10 
 
 Label_Search_For_LoaderBin:
 
 	cmp dx, 0
 	jz Label_Goto_Next_Sector_In_Root_Dir
 	dec dx 
-	mov cx, 11 
+	mov cx, 11                                 # cx 记录这目录项的文件名长度不包括 '.'  "LOADER  BIN" 11 个字符
 
 Label_Cmp_FileName:
 
@@ -176,3 +176,120 @@ Label_Go_On_Reading:
 	add esp, 2
 	pop bp 
 	ret
+
+
+;====================================================================== 
+;display on screen : ERROR : No Loader Found
+
+Label_No_LoaderBin:
+	mov ax, 1301h
+	mov bx, 008ch
+	mov dx, 0100h 
+	mov cx, 21
+	push ax 
+	mov ax, ds 
+	mov es, ax 
+	pop ax 
+	mov bp, NoLoaderMessage
+	int 10h                               #这段代码是借助BIOS 中断处理程序INT 10h, 将 字符串显示在屏幕的第1行 第0列上
+	jmp $                                 #这里相当是一个死循环
+
+
+; get FAT Entry
+; 使用 Func_GetFATEntry 模块可以根据当前的FAT表项 索引出下一个FAT表项，
+Func_GetFATEntry:
+
+	push es 
+	push bx 
+	push ax 
+	mov ax, 00 
+	mov es, ax 
+	pop ax 
+	mov byte [Odd], 0
+	mov bx, 3
+	mul bx 
+	mov bx, 2
+	div bx 
+	cmp dx, 0
+	jz Label_Even
+	mov byte [Odd], 1
+
+Label_Even:
+	
+	xor dx, dx
+	mov bx, [BPB_BytesPerSec]
+	div bx
+	push dx 
+	mov bx, 800h
+	add ax, SectorNumOfFAT1Start
+	mov cl, 2
+	call Func_ReadOneSector
+
+	pop dx 
+	add bx, dx
+	mov ax, [es:bx]
+	cmp byte [Odd], 1
+	jnz Label_Even_2
+	shr ax, 4
+
+Label_Even_2:
+	
+	and ax, 0fffh
+	pop bx
+	pop es 
+	ret
+
+
+; found loader.bin name in root director struct
+Label_FileName_Found:
+
+	mov ax, RootDirSectors
+	and di, 0ffe0h
+	add si, 01ah
+	mov cx, word [es:di]
+	push cx
+	add cx, ax
+	add cx, SectorBalance
+	mov ax, BaseOfLoader                   ; 指定loader.bin 加载进内存的地址 BaseOfLoader OffsetOfLoader
+	mov es, ax
+	mov bx, OffsetOfLoader
+	mov ax, cx
+
+;在屏幕上显示 '.'
+Label_Go_On_Loading_File: 
+
+	push ax 
+	push bx 
+	mov ah, 0eh
+	mov al, '.'                           ; 待显示的字符  每读入一个扇区 写一个.
+	mov bl, 0fh                           ; 前景色
+	int 10h
+	pop bx
+	pop ax
+
+	mov cl, 1
+	call Func_ReadOneSector
+	pop ax
+	call Func_GetFATEntry
+	cmp ax, 0fffh                        ; 当Func_GetFATEntry 返回的表项的值为	0fffh 时 停止
+	jz Label_File_Loaded                 ; 读完后 跳转到 Label_File_Loaded 准备执行 loader.bin 程序
+	push ax
+	mov dx, RootDirSectors
+	add ax, dx
+	add ax, SectorBalance
+	add bx, [BPB_BytesPerSec]
+	jmp Label_Go_On_Loading_File
+
+Label_File_Loaded:
+	
+	jmp $
+
+; tmp variable
+RootDirSizeForLoop dw RootDirSectors
+SectorNo dw 0
+Odd db 0
+
+;display messages
+StartBootMessage: db "start boot"
+NoLoaderMessage: db "ERROR: No LOADER Found"
+LoaderFileName: db "LOADER  BIN", 0
