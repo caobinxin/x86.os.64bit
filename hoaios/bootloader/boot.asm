@@ -232,6 +232,7 @@ Label_Go_On_Reading:
 ;=======	get FAT Entry
 
 Func_GetFATEntry:
+
 	push	es
 	push	bx
 	push	ax
@@ -258,7 +259,6 @@ Label_Even:
 	mov	cl,	2
 	call	Func_ReadOneSector
 	
-xchg bx,bx
 	pop	dx
 	add	bx,	dx
 	mov	ax,	[es:bx]
