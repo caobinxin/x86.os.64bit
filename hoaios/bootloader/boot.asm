@@ -13,7 +13,7 @@
 ;
 ;***************************************************/
 
-org	0x7c00	
+	org	0x7c00	
 
 BaseOfStack	equ	0x7c00
 
@@ -48,6 +48,7 @@ SectorBalance	equ	17
 	BS_FileSysType	db	'FAT12   '
 
 Label_Start:
+
 	mov	ax,	cs
 	mov	ds,	ax
 	mov	es,	ax
@@ -93,7 +94,6 @@ Label_Start:
 
 Lable_Search_In_Root_Dir_Begin:
 
-xchg bx,bx
 	cmp	word	[RootDirSizeForLoop],	0
 	jz	Label_No_LoaderBin
 	dec	word	[RootDirSizeForLoop]	
@@ -199,7 +199,7 @@ Label_Go_On_Loading_File:
 
 Label_File_Loaded:
 	
-	jmp	$
+	jmp	BaseOfLoader:OffsetOfLoader
 
 ;=======	read one sector from floppy
 
@@ -232,7 +232,6 @@ Label_Go_On_Reading:
 ;=======	get FAT Entry
 
 Func_GetFATEntry:
-
 	push	es
 	push	bx
 	push	ax
@@ -259,6 +258,7 @@ Label_Even:
 	mov	cl,	2
 	call	Func_ReadOneSector
 	
+xchg bx,bx
 	pop	dx
 	add	bx,	dx
 	mov	ax,	[es:bx]
