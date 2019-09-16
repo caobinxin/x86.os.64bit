@@ -9,6 +9,7 @@ all:
 	
 	sudo mount ./boot.img /media/colby/ -t vfat -o loop
 	sudo cp loader.bin /media/colby/
+	sudo cp kernel.bin /media/colby/
 	sudo sync
 	sudo umount /media/colby
 	

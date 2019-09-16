@@ -259,8 +259,8 @@ Label_File_Loaded:
 		
 	mov	ax, 0B800h
 	mov	gs, ax
-	mov	ah, 0Fh				; 0000: 黑底    1111: 白字
-	mov	al, 'G'
+	mov	ah, 8Fh				; 0000: 黑底    1111: 白字
+	mov	al, 'K'
 	mov	[gs:((80 * 0 + 39) * 2)], ax	; 屏幕第 0 行, 第 39 列。
 
 KillMotor:
@@ -469,9 +469,11 @@ Label_SVGA_Mode_Info_Finish:
 
 ;=======	set the SVGA mode(VESA VBE)
 
+xchg bx, bx
 	mov	ax,	4F02h
-	mov	bx,	4180h	;========================mode : 0x180 or 0x143
+	mov	bx,	4143h	;========================mode : 0x180 or 0x143
 	int 	10h
+xchg bx, bx
 
 	cmp	ax,	004Fh
 	jnz	Label_SET_SVGA_Mode_VESA_VBE_FAIL
@@ -693,7 +695,6 @@ Label_DispAL:
 	sub	al,	0Ah
 	add	al,	'A'
 .2:
-
 	mov	[gs:edi],	ax
 	add	edi,	2
 	
