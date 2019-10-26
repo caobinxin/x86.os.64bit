@@ -36,13 +36,13 @@ lib.o: lib.c
 gate.o: gate.c
 	gcc  -mcmodel=large -fno-builtin -m64 -c gate.c
 printk.o: printk.c
-	gcc  -mcmodel=large -fno-builtin -m64 -c printk.c
+	gcc  -mcmodel=large -fno-builtin -fno-stack-protector -m64 -c printk.c
 
 trap.o: trap.c
 	gcc  -mcmodel=large -fno-builtin -m64 -c trap.c
 
 memory.o: memory.c
-	gcc  -mcmodel=large -fno-builtin -m64 -c memory.c
+	gcc  -mcmodel=large -fno-builtin -fno-stack-protector -m64 -c memory.c
 
 interrupt.o: interrupt.c
 	gcc  -mcmodel=large -fno-builtin -m64 -c interrupt.c

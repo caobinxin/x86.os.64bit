@@ -282,17 +282,6 @@ do								\
 
 */
 
-inline unsigned long * Get_gdt()
-{
-	unsigned long * tmp;
-	__asm__ __volatile__	(
-					"movq	%%cr3,	%0	\n\t"
-					:"=r"(tmp)
-					:
-					:"memory"
-				);
-	return tmp;
-}
 
-
+extern unsigned long * Get_gdt();
 #endif

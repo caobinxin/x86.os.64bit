@@ -355,3 +355,14 @@ find_free_pages:
 	return (struct Page *)(memory_management_struct.pages_struct + page);
 }
 
+unsigned long * Get_gdt()
+{
+	unsigned long * tmp;
+	__asm__ __volatile__	(
+					"movq	%%cr3,	%0	\n\t"
+					:"=r"(tmp)
+					:
+					:"memory"
+				);
+	return tmp;
+}
