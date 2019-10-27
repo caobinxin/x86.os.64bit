@@ -72,4 +72,8 @@
 
 # 汇编调试
 	魔术调试
-		xchg bx, bx
+		intel 汇编:
+			xchg bx, bx
+
+		AT&t 汇编:
+			xchg %bx, %bx

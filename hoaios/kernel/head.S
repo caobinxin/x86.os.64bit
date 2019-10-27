@@ -18,7 +18,7 @@
 .globl _start
 
 _start:
-
+xchg %bx,%bx
 	mov	$0x10,	%ax
 	mov	%ax,	%ds
 	mov	%ax,	%es
@@ -28,11 +28,15 @@ _start:
 
 //=======	load GDTR
 
+xchg %bx,%bx
 	lgdt	GDT_POINTER(%rip)
 
+xchg %bx,%bx
 //=======	load	IDTR
 
+xchg %bx,%bx
 	lidt	IDT_POINTER(%rip)
+xchg %bx,%bx
 
 	mov	$0x10,	%ax
 	mov	%ax,	%ds
